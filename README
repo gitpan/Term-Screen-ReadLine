@@ -2,6 +2,10 @@ NAME
 
 Term::Screen::ReadLine - Term::Screen extended with ReadLine
 
+PREREQUISITES
+
+Term::Screen
+
 SYNOPSIS
 
   use lib "./blib/lib";
@@ -34,10 +38,10 @@ SYNOPSIS
   print $r,ord($r),"\n";
   $r=ord($r);
   print $r,"\n";
-  if ($r eq 13) { 
+  if ($r eq 13) {
     print "aja!\n";
   }
-  
+
 
 exit;
 
@@ -58,23 +62,25 @@ readline(
     LINE	=> "",
     ONLYVALID	=> undef,
     CONVERT	=> undef,
+    PASSWORD	=> undef
 )
 
   ROW,COL	'at(ROW,COL) readline()...'.
   LEN		The maximum length of the line to read.
   DISPLAYLEN	The maximum length of the displayed field.
 		The display will scroll if the displaylen is exceeded.
-  EXITS         Explained below.
+  EXITS 	Explained below.
   LINE		A default value for LINE to use.
   ONLYVALID	A regex to validate the input.
   CONVERT	"up" or "lo" for uppercase or lowercase. Nothing
-	        if not used. Note: conversion will take place *after*
-                validation.
+		if not used. Note: conversion will take place *after*
+		validation.
+  PASSWORD	Display stars ('*') instead of what is typed..
 
   returns the inputted line.
 
   The readline() function does always return on the following keys:
-      
+
 	Enter, Arrow up, Arrow down, Esc, Tab and Ctrl-Enter.
 
   This can be extended using the EXITS argument, is a hash of keys
@@ -83,7 +89,6 @@ readline(
   example:
 
 	EXITS => { "k1" => "help", "k3" => "cancel" },
-
 
 
 last_key()
@@ -100,65 +105,6 @@ two_esc()
 
   Revert back to the standard Term::Screen behaviour for the Esc key.
 
-    HEADER    => <header to put on top of screen>,
-    CANCEL    => <text of cancel 'button', defaults to 'Esc - Cancel'>,
-    NEXT      => <text of next 'button', defaults to 'Ctrl-Enter - Next'>,
-    PREVIOUS  => <text of previous 'button', defaults tro 'PgUp - Previous'>,
-    FINISH    => <text of finish 'button', defaults to 'Ctrl-Enter - Finish>,
-    HELP      => <text of help 'button', defaults to 'F1 - Help'>,
-    HELPTEXT  => <text to put on your helpscreen>
-    NOFINISH  => <1/0 - Inidicates that this wizard is/is not (1/0) part
-                        of an ongoing 'wizard sequence'>
-    PROMPTS   => <array of fields to input>
-)
-
-  This function add's a screen to the list of screens that the wizards goes
-  through sequentially. If NOFINISH==1, the finish 'button' is not used. Use
-  this, if the last screen of this wizard is not actually the last screen
-  of a sequence of wizards. 
-
-  For instance, if you need to go one way or the other after the first screen,
-  you provide a wizard with one screen and no FINISH button. After that you
-  call the next sequence of screens.
-
-           PROMPTS => [
-             { KEY => "ANINT",     PROMPT => "INT",     LEN => 10, CONVERT => "up", ONLYVALID => "[0-9]*" },
-             { KEY => "ADOUBLE",  PROMPT => "DOUBLE",  LEN => 16, CONVERT => "up", ONLYVALID => "[0-9]+([.,][0-9]*)?" },
-           ]
-
-  Note the entries in PROMPTS : 
-
-     KEY         is the hash key with what you can access the field.
-     PROMPT      is the prompt to use for the field.
-     LEN         is the maximum length of the field.
-     CONVERT     'up' or 'lo' for uppercase or lowercase. If not used
-                 it won't convert.
-     ONLYVALID   is a regex to use for validation. Note: validation is
-                 done *before* conversion! If not used, no validation is
-                 done.
-     VALUE       a default value to use. This value will change if the
-                 wizard is used.
-
-
-del_screen(<name>)
-
-  This function deletes a screen with given name from the list of screens.
-
-
-get_screen(<name>)
-
-  This function get's you a handle to a defined screen with given name.
-
-
-get_keys()
-
-  This function gives you all the keys in a hash of a hash. Actually
-  a hash of screens and each screen a hash of keys. See synopsis for
-  usage.
-
-wizard()
-  
-  This function starts the wizard.
 
 AUTHOR
 

@@ -2,13 +2,11 @@ package Term::Screen::ReadLine;
 
 use strict;
 use base qw(Term::Screen);
-
 use Term::Screen;
-
 use vars qw($VERSION);
 
 BEGIN {
-  $VERSION=0.20;
+  $VERSION=0.30;
 }
 
 sub readline {
@@ -22,6 +20,7 @@ sub readline {
     EXITS	=> {},
     ONLYVALID	=> undef,
     CONVERT	=> undef,
+    PASSWORD	=> undef,
     @_
   };
   my $row	 = $args->{ROW};
@@ -32,6 +31,8 @@ sub readline {
   my %exits	 = %{ $args->{EXITS} };
   my $onlyvalid  = $args->{ONLYVALID};
   my $convert	 = $args->{CONVERT};
+
+  $self->{PASSWORD}=$args->{PASSWORD};
 
   if (defined $convert) {
     $convert=~tr/a-z/A-Z/;
@@ -48,6 +49,9 @@ sub readline {
   else {
     $convert="";
   }
+
+  if ($convert eq "up") { $line=~tr/a-z/A-Z/; }
+  elsif ($convert eq "lo") { $line=~tr/A-Z/a-z/; }
 
   my $c;
   my $ordc;
@@ -86,13 +90,13 @@ sub readline {
 	  my $s=$line.$c;
 	  if ($s=~/^$onlyvalid$/) {
 	    $line=$line.$c;
-            $self->_print_line($line,$displayLen,$row,$column,0);
-          }
+	    $self->_print_line($line,$displayLen,$row,$column,0);
+	  }
 	}
-        else {
+	else {
 	    $line=$line.$c;
-            $self->_print_line($line,$displayLen,$row,$column,0);
-        }
+	    $self->_print_line($line,$displayLen,$row,$column,0);
+	}
       }
     }
 
@@ -130,7 +134,7 @@ sub getch {
   }
   if (not $self->{READLINEGETCH})  {
     return $self->Term::Screen::getch();
-  } 
+  }
 
   sysread STDIN,$c,1;
 
@@ -172,6 +176,11 @@ sub _print_line {
 
   $L=length $line;
 
+  if ($self->{PASSWORD}) {
+    $line="";
+    for(1..$L) { $line.="*"; }
+  }
+
   if ($L>$displaylen) {
     if ($mode == 1) {
       $self->at($row,$column)->puts(substr($line,$L-$displaylen-1,$displaylen));
@@ -181,18 +190,18 @@ sub _print_line {
     }
   }
   else {
-    if ($mode == 1 and $L > 0) { 
+    if ($mode == 1 and $L > 0) {
       print chr(8).chr(32).chr(8);
     }
     elsif ($mode == 2 ) {my $str;
-                        my $i;
+			my $i;
       for(1..$displaylen-$L) {
-        $str.=" ";
+	$str.=" ";
       }
       $self->at($row,$column)->puts($line)->puts($str);
       $self->at($row,$column+$L);
     }
-    elsif ($L != $displaylen) {
+    elsif ($L <= $displaylen) {
       print substr($line,$L-1,1);
     }
   }
@@ -240,7 +249,7 @@ Term::Screen::ReadLine - Term::Screen extended with ReadLine
   if ($r eq 13) { 
     print "aja!\n";
   }
-  
+
 
 exit;
 
@@ -261,23 +270,25 @@ readline(
     LINE	=> "",
     ONLYVALID	=> undef,
     CONVERT	=> undef,
+    PASSWORD	=> undef,
 )
 
   ROW,COL	'at(ROW,COL) readline()...'.
   LEN		The maximum length of the line to read.
   DISPLAYLEN	The maximum length of the displayed field.
 		The display will scroll if the displaylen is exceeded.
-  EXITS         Explained below.
+  EXITS 	Explained below.
   LINE		A default value for LINE to use.
   ONLYVALID	A regex to validate the input.
   CONVERT	"up" or "lo" for uppercase or lowercase. Nothing
-	        if not used. Note: conversion will take place *after*
-                validation.
+		if not used. Note: conversion will take place *after*
+		validation.
+  PASSWORD	Display stars ('*') instead of what is typed..
 
   returns the inputted line.
 
   The readline() function does always return on the following keys:
-      
+
 	Enter, Arrow up, Arrow down, Esc, Tab and Ctrl-Enter.
 
   This can be extended using the EXITS argument, is a hash of keys
@@ -302,66 +313,6 @@ one_esc()
 two_esc()
 
   Revert back to the standard Term::Screen behaviour for the Esc key.
-
-    HEADER    => <header to put on top of screen>,
-    CANCEL    => <text of cancel 'button', defaults to 'Esc - Cancel'>,
-    NEXT      => <text of next 'button', defaults to 'Ctrl-Enter - Next'>,
-    PREVIOUS  => <text of previous 'button', defaults tro 'PgUp - Previous'>,
-    FINISH    => <text of finish 'button', defaults to 'Ctrl-Enter - Finish>,
-    HELP      => <text of help 'button', defaults to 'F1 - Help'>,
-    HELPTEXT  => <text to put on your helpscreen>
-    NOFINISH  => <1/0 - Inidicates that this wizard is/is not (1/0) part
-                        of an ongoing 'wizard sequence'>
-    PROMPTS   => <array of fields to input>
-)
-
-  This function add's a screen to the list of screens that the wizards goes
-  through sequentially. If NOFINISH==1, the finish 'button' is not used. Use
-  this, if the last screen of this wizard is not actually the last screen
-  of a sequence of wizards. 
-
-  For instance, if you need to go one way or the other after the first screen,
-  you provide a wizard with one screen and no FINISH button. After that you
-  call the next sequence of screens.
-
-           PROMPTS => [
-             { KEY => "ANINT",     PROMPT => "INT",     LEN => 10, CONVERT => "up", ONLYVALID => "[0-9]*" },
-             { KEY => "ADOUBLE",  PROMPT => "DOUBLE",  LEN => 16, CONVERT => "up", ONLYVALID => "[0-9]+([.,][0-9]*)?" },
-           ]
-
-  Note the entries in PROMPTS : 
-
-     KEY         is the hash key with what you can access the field.
-     PROMPT      is the prompt to use for the field.
-     LEN         is the maximum length of the field.
-     CONVERT     'up' or 'lo' for uppercase or lowercase. If not used
-                 it won't convert.
-     ONLYVALID   is a regex to use for validation. Note: validation is
-                 done *before* conversion! If not used, no validation is
-                 done.
-     VALUE       a default value to use. This value will change if the
-                 wizard is used.
-
-
-del_screen(<name>)
-
-  This function deletes a screen with given name from the list of screens.
-
-
-get_screen(<name>)
-
-  This function get's you a handle to a defined screen with given name.
-
-
-get_keys()
-
-  This function gives you all the keys in a hash of a hash. Actually
-  a hash of screens and each screen a hash of keys. See synopsis for
-  usage.
-
-wizard()
-  
-  This function starts the wizard.
 
 =head1 AUTHOR
 

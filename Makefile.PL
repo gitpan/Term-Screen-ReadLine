@@ -4,9 +4,10 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'	=> 'Term::Screen::ReadLine',
     'VERSION_FROM' => 'ReadLine.pm', # finds $VERSION
-    'LIBS'	=> [''],   # e.g., '-lm' 
-    'DEFINE'	=> '',	   # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> '',	   # e.g., '-I/usr/include/other' 
+    'LIBS'	=> [''],   # e.g., '-lm'
+    'DEFINE'	=> '',	   # e.g., '-DHAVE_SOMETHING'
+    'INC'	=> '',	   # e.g., '-I/usr/include/other'
+    'PREREQ_PM' => { Term::Screen => 0 },
 );
 
 

@@ -1,0 +1,6 @@
+0.30 -- Made test.pl better structured test.
+     -- With test.pl, debugged ReadLine.pm.
+     -- Changed Makefile.PL to contain dependency to Term::Screen
+     -- Extended readline() function with PASSWORD functionality.
+
+0.20 -- First version.
