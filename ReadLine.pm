@@ -6,7 +6,7 @@ use Term::Screen;
 use vars qw($VERSION);
 
 BEGIN {
-  $VERSION=0.34;
+  $VERSION=0.35;
 }
 
 sub readline {
@@ -36,7 +36,7 @@ sub readline {
   my $cursor     = length $line;
   my $nocommit   = $args->{NOCOMMIT};
   my $readonly   = $args->{READONLY};
-
+  
   if (length $line == 1) { $cursor=0; }
 
   $self->{PASSWORD}=$args->{PASSWORD};
@@ -184,6 +184,7 @@ sub getch {
   }
 
   sysread STDIN,$c,1;
+  if (ord($c)==0) { exit 100; }
 
   if ($c eq "\e") {
     while ($self->key_pressed(0)) {my $cc;
@@ -226,6 +227,10 @@ sub _print_line {
   if ($self->{PASSWORD}) {
     $line=$self->setstr("*",$L);
   }
+      #my $a=$L-$displaylen;
+      #my $ll=length $line;
+      #$self->at(22,0)->puts("$line - $ll - $a - $L - $displaylen");
+
 
   if ($L>$displaylen) {
     if ($mode == 1) {
@@ -325,7 +330,9 @@ of the Term::Screen double Esc.
 
 =head1 USAGE
 
-readline(
+=head2 readline()
+
+  readline(
     ROW 	=> 0,
     COL 	=> 0,
     LEN 	=> 40,
@@ -334,52 +341,97 @@ readline(
     ONLYVALID	=> undef,
     CONVERT	=> undef,
     PASSWORD	=> undef,
-)
+  )
 
-  ROW,COL	'at(ROW,COL) readline()...'.
-  LEN		The maximum length of the line to read.
-  DISPLAYLEN	The maximum length of the displayed field.
-		The display will scroll if the displaylen is exceeded.
-  EXITS 	Explained below.
-  LINE		A default value for LINE to use.
-  ONLYVALID	A regex to validate the input.
-  CONVERT	"up" or "lo" for uppercase or lowercase. Nothing
-		if not used. Note: conversion will take place *after*
-		validation.
-  PASSWORD	Display stars ('*') instead of what is typed..
+I<B<Parameters>>
 
-  returns the inputted line.
+=over 1
 
-  The readline() function does always return on the following keys:
+=item ROW,COL
 
-	Enter, Arrow up, Arrow down, Esc, Tab and Ctrl-Enter.
+'at(ROW,COL) readline()...'.
 
-  This can be extended using the EXITS argument, is a hash of keys
-  (see Term::Screen) and a description to return for that key.
+=item LEN
 
-  example:
+The maximum length of the line to read.
 
-	EXITS => { "k1" => "help", "k3" => "cancel" },
+=item DISPLAYLEN
 
+The maximum length of the displayed field. The display will scroll if C<DISPLAYLEN> is exceeded.
 
+=item EXITS
 
-last_key()
+Explained below.
 
-  returns the last key pressed, that made the readline function return.
+=item LINE
 
+A default value for readline to use.
 
-one_esc()
+=item ONLYVALID
 
-  Makes it possible to press only one time Esc to make readline return.
-  This is the default for Term::Screen::ReadLine.
+A regex to validate the input.
 
-two_esc()
+=item CONVERT
 
-  Revert back to the standard Term::Screen behaviour for the Esc key.
+B<"up"> or B<"lo"> for uppercase or lowercase. Empty (B<"">) if not used. 
+I<Note: conversion will take place B<after> validation>.
+
+=item PASSWORD
+
+Display stars ('*') instead of what is being typed in.
+
+=back
+
+I<B<Return value>>
+
+=over 1
+
+Returns The inputted line.
+
+=back
+
+I<B<Notes>>
+
+=over 1
+
+=item *
+
+The readline() function does always return on the following keys:
+C<Enter>, C<Arrow Up>, C<Arrow Down>, C<Esc>, C<Tab> and C<Ctrl-Enter/F4>.
+
+This can be extended using the EXITS argument, which must be a hash of
+keys (see Term::Screen) and a description that will be returned for that key.
+
+example: C<EXITS =E<gt> { "k1" =E<gt> "help", "k3" =E<gt> "cancel" }>.
+
+This will bind 'F1' to a 'help' message and 'F3' to a 'cancel' message. 
+
+=item *
+
+The readline() function will issue an C<exit(100)>, if a '\0' character is 
+read. This is what usually happens when reading from STDIN does not 
+give 'eof()' condition as would be nice, if a telnet session is suddenly
+killed. Not exiting on a '\0' character will result in a racing perl
+script.
+
+=back
+
+=head2 last_key()
+
+returns the last key pressed, that made the readline function return.
+
+=head2 one_esc()
+
+Makes it possible to press only one time Esc to make readline return.
+This is the default for Term::Screen::ReadLine.
+
+=head2 two_esc()
+
+Revert back to the standard Term::Screen behaviour for the Esc key.
 
 =head1 AUTHOR
 
-  Hans Dijkema <hans@oesterholt-dijkema.emailt.nl>
+Hans Dijkema <hdnews _AT_ gawab _DOT_ com>
 
 =cut
 

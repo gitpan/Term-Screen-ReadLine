@@ -1,3 +1,13 @@
+0.35 -- Fixed a circumstantial BUG. 
+	 -- The getch() function will result in a race condition, in certain situations.
+        Notably, when a telnet window is being killed without terminating the program, which
+        results in a 'floating tty bound program', that keeps the CPU at 100%.
+
+ 	    The problem has been solved, by checking for ord($c)==0 in the getch() function,
+        and using an exit 100, when this condition occures.
+
+0.34 -- Removed debugging information.
+
 0.33 -- Some internal changes.
      -- notably the setstr() function to make a string of '*' characters.
 
