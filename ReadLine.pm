@@ -6,7 +6,7 @@ use Term::Screen;
 use vars qw($VERSION);
 
 BEGIN {
-  $VERSION=0.32;
+  $VERSION=0.34;
 }
 
 sub readline {
@@ -21,6 +21,8 @@ sub readline {
     ONLYVALID	=> undef,
     CONVERT	=> undef,
     PASSWORD	=> undef,
+    NOCOMMIT    => 0,
+    READONLY    => 0,
     @_
   };
   my $row	 = $args->{ROW};
@@ -31,6 +33,11 @@ sub readline {
   my %exits	 = %{ $args->{EXITS} };
   my $onlyvalid  = $args->{ONLYVALID};
   my $convert	 = $args->{CONVERT};
+  my $cursor     = length $line;
+  my $nocommit   = $args->{NOCOMMIT};
+  my $readonly   = $args->{READONLY};
+
+  if (length $line == 1) { $cursor=0; }
 
   $self->{PASSWORD}=$args->{PASSWORD};
 
@@ -58,7 +65,7 @@ sub readline {
 
   if (not defined $displayLen) { $displayLen = $args->{LEN}; }
 
-  $self->_print_line($line,$displayLen,$row,$column,2);
+  $self->_print_line($line,$displayLen,$row,$column,$cursor,2);
 
   $exits{"013"}="enter"   if not exists $exits{"013"};
   $exits{"ku"}="ku"	  if not exists $exits{"ku"};
@@ -73,8 +80,44 @@ sub readline {
   $ordc=sprintf("%03d",ord($c));
 
   while ( (not exists $exits{$c}) and (not exists $exits{$ordc}) ) {
+
+
+   if ($readonly) {
+     ## next if readonly
+   }
+   elsif ($lineLen == 1) {
+     ## If the requested line length is 1 don't try any line processing
+
+      if (($c ge " ") and ($c le "~") and (length $c == 1)) {
+       my $input=0;
+
+        if ($convert eq "up") { $c=~tr/a-z/A-Z/; }
+        elsif ($convert eq "lo") { $c=~tr/A-Z/a-z/; }
+
+        if (defined $onlyvalid) {
+	  if ($c=~/^$onlyvalid$/) { 
+            $input=1;
+          }
+        }
+        else {
+          $input=1;
+        }
+
+        if ($input==1) {
+          $line=$c;
+          $self->_print_line($line,$displayLen,$row,$column,$cursor,2);
+          if ($nocommit) { $c=chr(13);$ordc="013";last; }
+        }
+
+      }
+
+   }
+   else {
+
+    ## Else do difficult processing
+
     if ($ordc==8) {my $L;
-      $self->_print_line($line,$displayLen,$row,$column,1);
+      $self->_print_line($line,$displayLen,$row,$column,$cursor,1);
       $L=length $line;
       $L--;
       $line=substr($line,0,$L);
@@ -85,24 +128,28 @@ sub readline {
       elsif ($convert eq "lo") { $c=~tr/A-Z/a-z/; }
 
       my $L=length $line;
-      if ($L < $lineLen) {
+      if ($L < $lineLen) {my $extend=0;
 	if (defined $onlyvalid) {
 	  my $s=$line.$c;
 	  if ($s=~/^$onlyvalid$/) {
-	    $line=$line.$c;
-	    $self->_print_line($line,$displayLen,$row,$column,0);
-	  }
+            $extend=1;
+          }
 	}
-	else {
+        if (not defined $onlyvalid) {
+          $extend=1;
+        }
+        if ($extend) {
 	    $line=$line.$c;
-	    $self->_print_line($line,$displayLen,$row,$column,0);
+	    $self->_print_line($line,$displayLen,$row,$column,$cursor,0);
 	}
       }
     }
-
-    $c=$self->getch();
-    $ordc=sprintf("%03d",ord($c));
+   }
+   $c=$self->getch();
+   $ordc=sprintf("%03d",ord($c));
   }
+
+  #$self->at(20,0)->puts("$ordc")->getch();
 
   $self->{LASTKEY}=$c;
   $self->{LASTKEY}=$exits{$c}	 if exists $exits{$c};
@@ -171,14 +218,13 @@ sub lastkey {
 #
 
 sub _print_line {
-  my ($self, $line,  $displaylen, $row, $column, $mode) = @_;
+  my ($self, $line,  $displaylen, $row, $column, $cursor, $mode) = @_;
   my $L;
 
   $L=length $line;
 
   if ($self->{PASSWORD}) {
-    $line="";
-    for(1..$L) { $line.="*"; }
+    $line=$self->setstr("*",$L);
   }
 
   if ($L>$displaylen) {
@@ -204,6 +250,23 @@ sub _print_line {
     elsif ($L <= $displaylen) {
       print substr($line,$L-1,1);
     }
+  }
+}
+
+sub setstr {
+  my ($self,$char,$len)=@_;
+
+  if ($len <= 0) {
+    return "";
+  }
+  elsif ($len==1) {
+    return $char;
+  }
+  elsif ($len%2==1) {
+    return $char.$self->setstr($char,$len-1);
+  }
+  else {
+    return $self->setstr($char.$char,$len>>1);
   }
 }
 

@@ -1,3 +1,6 @@
+0.33 -- Some internal changes.
+     -- notably the setstr() function to make a string of '*' characters.
+
 0.32 -- Converted all files to UNIX format.
 
 0.30 -- Made test.pl better structured test.
