@@ -1,11 +1,4 @@
-#
-# TCtest.pl
-#
-# test program to exercise the screen contol module
-#
-# this file is available under the same terms as the perl language
-# distribution. See the Artistic License.
-#
+#!/usr/bin/perl
 
 use lib "/prj/dsnew/perlmods/lib/site_perl/current";
 use lib "/prj/dsnew/perlmods/lib/site_perl/current/aix";
