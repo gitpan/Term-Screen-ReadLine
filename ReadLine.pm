@@ -6,7 +6,7 @@ use Term::Screen;
 use vars qw($VERSION);
 
 BEGIN {
-  $VERSION=0.35;
+  $VERSION=0.36;
 }
 
 sub readline {
@@ -23,6 +23,7 @@ sub readline {
     PASSWORD	=> undef,
     NOCOMMIT    => 0,
     READONLY    => 0,
+    OVERWRITE   => 0,
     @_
   };
   my $row	 = $args->{ROW};
@@ -36,6 +37,7 @@ sub readline {
   my $cursor     = length $line;
   my $nocommit   = $args->{NOCOMMIT};
   my $readonly   = $args->{READONLY};
+  my $overwrite  = $args->{OVERWRITE};
   
   if (length $line == 1) { $cursor=0; }
 
@@ -65,7 +67,7 @@ sub readline {
 
   if (not defined $displayLen) { $displayLen = $args->{LEN}; }
 
-  $self->_print_line($line,$displayLen,$row,$column,$cursor,2);
+  $self->_print_line($line,$displayLen,$row,$column,$cursor,2,$overwrite);
 
   $exits{"013"}="enter"   if not exists $exits{"013"};
   $exits{"ku"}="ku"	  if not exists $exits{"ku"};
@@ -219,7 +221,7 @@ sub lastkey {
 #
 
 sub _print_line {
-  my ($self, $line,  $displaylen, $row, $column, $cursor, $mode) = @_;
+  my ($self, $line,  $displaylen, $row, $column, $cursor, $mode, $overwrite) = @_;
   my $L;
 
   $L=length $line;
@@ -244,10 +246,13 @@ sub _print_line {
     if ($mode == 1 and $L > 0) {
       print chr(8).chr(32).chr(8);
     }
-    elsif ($mode == 2 ) {my $str;
-			my $i;
+    elsif ($mode == 2 ) {
+       my $str='';
+	   my $i;
+       unless($overwrite) {
       for(1..$displaylen-$L) {
 	$str.=" ";
+      }
       }
       $self->at($row,$column)->puts($line)->puts($str);
       $self->at($row,$column+$L);
@@ -341,6 +346,7 @@ of the Term::Screen double Esc.
     ONLYVALID	=> undef,
     CONVERT	=> undef,
     PASSWORD	=> undef,
+    OVERWRITE   => undef,
   )
 
 I<B<Parameters>>
@@ -379,6 +385,12 @@ I<Note: conversion will take place B<after> validation>.
 =item PASSWORD
 
 Display stars ('*') instead of what is being typed in.
+
+=item OVERWRITE
+
+By default readline will clear characters from the current position to the end
+of the given field length. By setting OVERWRITE to a non-zero value will any
+characters visible in the field to be overwritten rather than removed.
 
 =back
 
@@ -431,7 +443,11 @@ Revert back to the standard Term::Screen behaviour for the Esc key.
 
 =head1 AUTHOR
 
-Hans Dijkema <hdnews _AT_ gawab _DOT_ com>
+Hans Dijkema <oesterhol@cpan.org>
+
+=head1 LICENSE
+
+Artistic
 
 =cut
 
