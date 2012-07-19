@@ -6,7 +6,7 @@ use Term::Screen;
 use vars qw($VERSION);
 
 BEGIN {
-  $VERSION=0.36;
+  $VERSION=0.37;
 }
 
 sub readline {

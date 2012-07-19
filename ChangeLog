@@ -1,3 +1,8 @@
+0.37 -- Fixed bug #12096: Automated testing issues
+
+0.36 -- Applied patch by anonymous
+	66522 	overwrite rather than remove characters on initialisation
+
 0.35 -- Fixed a circumstantial BUG. 
 	 -- The getch() function will result in a race condition, in certain situations.
         Notably, when a telnet window is being killed without terminating the program, which
