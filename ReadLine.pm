@@ -6,7 +6,7 @@ use Term::Screen;
 use vars qw($VERSION);
 
 BEGIN {
-  $VERSION=0.37;
+  $VERSION=0.38;
 }
 
 sub readline {
@@ -117,8 +117,9 @@ sub readline {
    else {
 
     ## Else do difficult processing
+    #print "ordc=$ordc\n";
 
-    if ($ordc==8) {my $L;
+    if ($ordc==8 || $ordc==127) {my $L;
       $self->_print_line($line,$displayLen,$row,$column,$cursor,1);
       $L=length $line;
       $L--;
